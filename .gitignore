@@ -9,3 +9,4 @@ node_modules/
 /main.js
 plugin/main.js
 .venv/
+plugin/dist/

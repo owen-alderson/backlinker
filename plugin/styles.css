@@ -1,0 +1,4 @@
+.backlinker-input { width: 100%; font-size: var(--font-ui-medium); resize: vertical; }
+.backlinker-preview { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; min-height: 1.5em; }
+.backlinker-line { white-space: pre-wrap; word-break: break-word; }
+.backlinker-ambiguous { color: var(--text-warning); font-size: var(--font-ui-small); }

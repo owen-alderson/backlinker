@@ -54,7 +54,7 @@ def test_empty_stdin(vault, capsys, monkeypatch):
 
 def test_date_and_to_flags(vault, capsys):
     assert run(["--date", "2026-10-06", "--to", "Jonas", "pitch prep"]) == 0
-    assert "- pitch prep\n" in (vault.root / "Daily/2026-10-06.md").read_text()
+    assert "- [[Jonas Weber]]: pitch prep\n" in (vault.root / "Daily/2026-10-06.md").read_text()
     assert "- [[2026-10-06]] pitch prep\n" in (vault.root / "People/Jonas Weber.md").read_text()
 
 

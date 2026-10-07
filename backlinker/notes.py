@@ -48,7 +48,7 @@ def insert_lines(text: str, new: list[str], heading: str = "", nl: str = "\n") -
     """Add `new` lines at the end of the section under `heading` (any level if it has no #s),
     creating the heading at the end of the note if it's missing. No heading: end of the note."""
     lines = text.splitlines(keepends=True)
-    want = _parse_heading(heading) if heading.lstrip().startswith("#") else (None, heading.strip().casefold())
+    want = (heading.lstrip().startswith("#") and _parse_heading(heading)) or (None, heading.strip().casefold())
 
     # Map headings, ignoring frontmatter and fenced code.
     heads, fence = [], None

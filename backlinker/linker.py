@@ -1,7 +1,7 @@
 """Turn plain text into [[wikilinks]] for notes that already exist.
 
 Precision over recall: a wrong link is worse than a missing one, so
-- only whole words match, and the longest name wins ("Sam Lee" before "Sam");
+- only whole words match, and the longest name wins ("Maya Chen" before "Maya");
 - names of 3 letters or fewer must match case exactly ("AI" never matches "ai");
 - a person's first name links only when it is capitalised and belongs to one person;
 - a name shared by two notes is reported as ambiguous and left alone;
@@ -147,7 +147,7 @@ class Linker:
                     start, end = window[0].start(), window[-1].end()
                     k = " ".join(t.group().casefold() for t in window)
                     targets = self._resolve(k, norm[start:end])
-                    if not targets and k.endswith("'s"):  # possessive: "Sam's deck"
+                    if not targets and k.endswith("'s"):  # possessive: "Maya's deck"
                         end -= 2
                         targets = self._resolve(k[:-2], norm[start:end])
                     if not targets:

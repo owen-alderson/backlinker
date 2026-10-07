@@ -1,8 +1,8 @@
 """bl: capture into your Obsidian vault with the [[links]] already in place.
 
-  bl "call with Sam about the pilot"       today's daily note, mentions linked
-  bl -t "send Dana the deck fri"             a task with a due date
-  bl --to "Sam" "prefers mornings"         also add it to Sam's note
+  bl "call with Maya about the pilot"        today's daily note, mentions linked
+  bl -t "send Jonas the deck fri"            a task with a due date
+  bl --to "Maya" "prefers mornings"          also add it to Maya's note
   bl --date yesterday "ran 5k"               into another day's note
   echo "..." | bl -                          from stdin, one entry per line
   bl link "Meeting notes"                    link unlinked mentions in a note
@@ -266,6 +266,9 @@ def run(argv: list[str] | None = None) -> int:
 
 
 def main() -> None:
+    for stream in (sys.stdout, sys.stderr):  # ✓ and 📅 must not crash a Windows pipe
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     sys.exit(run())
 
 

@@ -23,6 +23,10 @@ def isolated(tmp_path, monkeypatch):
     monkeypatch.delenv("BACKLINKER_VAULT", raising=False)
     monkeypatch.setenv("NO_COLOR", "1")
     monkeypatch.setattr(vaults, "obsidian_registry_paths", lambda: [tmp_path / "obsidian.json"])
+    # Tests write fixtures with "\n"; don't let Windows turn them into "\r\n" behind our back.
+    original = Path.write_text
+    monkeypatch.setattr(Path, "write_text", lambda self, data, encoding="utf-8", errors=None, newline="":
+                        original(self, data, encoding, errors, newline))
 
 
 @pytest.fixture

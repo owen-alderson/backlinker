@@ -85,3 +85,7 @@ def test_no_final_newline_and_crlf():
 
 def test_frontmatter_only_note():
     assert insert_lines("---\ndate: x\n---\n", ["- a"]) == "---\ndate: x\n---\n\n- a\n"
+
+
+def test_heading_without_space_after_hashes_is_matched_by_title():
+    assert insert_lines("# Day\n", ["- b"], "#Log") == "# Day\n\n#Log\n- b\n"

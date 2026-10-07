@@ -156,3 +156,9 @@ def test_plan_link_by_path_and_skips_self(demo):
     (demo.root / "People/Maya Chen.md").write_text("# Maya Chen\nMaya met Jonas.\n")
     c = plan_link(demo, str(demo.root / "People/Maya Chen.md"))
     assert c.edits[0].after == "# Maya Chen\nMaya met [[Jonas Weber|Jonas]].\n"
+
+
+def test_to_note_is_named_in_the_daily_line_when_text_doesnt_mention_it(demo):
+    cap(demo, "wants a weekly update", to=["Jonas", "Harbor"])
+    assert read(demo, "Daily/2026-10-07.md").endswith(
+        "- 14:32 [[Jonas Weber]], [[Harbor Launch]]: wants a weekly update\n")

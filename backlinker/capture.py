@@ -12,7 +12,7 @@ from pathlib import Path
 
 from backlinker import daily, journal, safewrite
 from backlinker.dates import find_due
-from backlinker.index import load_notes, scan, notes_from
+from backlinker.index import link_targets, load_notes, notes_from, scan
 from backlinker.linker import PROTECTED, Linker, Result
 from backlinker.notes import find_note, insert_lines
 from backlinker.vaults import Vault
@@ -75,6 +75,7 @@ def plan_capture(vault: Vault, text: str, *, task: bool = False, day: date | Non
     linker = linker_for(vault, entries)
     s = vault.settings
     targets = [find_note(entries, name, s.people_folders) for name in to]   # fails before anything is planned
+    names = link_targets([rel for rel, _, _ in entries])
     daily_rel = daily.daily_rel(vault, day)
     cap = Capture(vault, day)
     edits: dict[Path, Edit] = {}
@@ -111,7 +112,10 @@ def plan_capture(vault: Vault, text: str, *, task: bool = False, day: date | Non
             daily_lines.append(f"- [ ] {r.text}{suffix}")
         else:
             stamp = f"{now:%H:%M} " if s.time_prefix and day == now.date() else ""
-            daily_lines.append(f"- {stamp}{r.text}")
+            # say who/what it's about when the text itself doesn't link the --to notes
+            about = [names[rel] for rel in targets if names[rel] not in r.targets]
+            lead = ", ".join(f"[[{t}]]" for t in about) + ": " if about else ""
+            daily_lines.append(f"- {stamp}{lead}{r.text}")
 
         for rel in targets:
             own = rel[:-3]
