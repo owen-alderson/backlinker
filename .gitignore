@@ -1,3 +1,11 @@
 __pycache__/
 *.pyc
 .DS_Store
+*.egg-info/
+dist/
+build/
+.venv/
+node_modules/
+/main.js
+plugin/main.js
+.venv/

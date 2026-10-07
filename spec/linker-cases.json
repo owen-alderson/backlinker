@@ -1,0 +1,473 @@
+{
+ "about": "Golden cases for the linker. backlinker (Python) and the Obsidian plugin (TypeScript) must both pass every case.",
+ "notes": [
+  {
+   "path": "People/Maya Chen.md",
+   "aliases": [
+    "Maya C"
+   ],
+   "tags": [
+    "person"
+   ]
+  },
+  {
+   "path": "People/Jonas Weber.md",
+   "aliases": [],
+   "tags": [
+    "person"
+   ]
+  },
+  {
+   "path": "People/Sam Okafor.md",
+   "aliases": [],
+   "tags": [
+    "person"
+   ]
+  },
+  {
+   "path": "People/Sam Patel.md",
+   "aliases": [],
+   "tags": [
+    "person"
+   ]
+  },
+  {
+   "path": "People/Léa Dubois.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "People/Chloé d'Arcy.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "People/Anne-Marie Roux.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Contacts/Ola Bello.md",
+   "aliases": [],
+   "tags": [
+    "people/friends"
+   ]
+  },
+  {
+   "path": "Companies/Northwind Capital.md",
+   "aliases": [
+    "Northwind"
+   ],
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "path": "Companies/Lumen Labs.md",
+   "aliases": [
+    "Lumen"
+   ],
+   "tags": [
+    "company"
+   ]
+  },
+  {
+   "path": "Companies/J.P. Morgan.md",
+   "aliases": [
+    "JPM"
+   ],
+   "tags": []
+  },
+  {
+   "path": "Companies/The Native.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Companies/Native Records.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Topics/Market Making.md",
+   "aliases": [
+    "MM"
+   ],
+   "tags": []
+  },
+  {
+   "path": "Topics/ETF.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Topics/AI.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Topics/Python.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Topics/Node.js.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Topics/Deep Work.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Projects/Harbor.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Archive/Harbor.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "Daily/2026-10-06.md",
+   "aliases": [],
+   "tags": []
+  },
+  {
+   "path": "X.md",
+   "aliases": [],
+   "tags": []
+  }
+ ],
+ "cases": [
+  {
+   "why": "unique capitalised first name of a person",
+   "text": "call with Maya",
+   "expect": "call with [[Maya Chen|Maya]]",
+   "ambiguous": []
+  },
+  {
+   "why": "first names must be capitalised",
+   "text": "call with maya",
+   "expect": "call with maya",
+   "ambiguous": []
+  },
+  {
+   "why": "full name, exact case: no alias needed",
+   "text": "Maya Chen joined",
+   "expect": "[[Maya Chen]] joined",
+   "ambiguous": []
+  },
+  {
+   "why": "full names match in any case",
+   "text": "maya chen joined",
+   "expect": "[[Maya Chen|maya chen]] joined",
+   "ambiguous": []
+  },
+  {
+   "why": "possessive stays outside the link",
+   "text": "Maya's deck",
+   "expect": "[[Maya Chen|Maya]]'s deck",
+   "ambiguous": []
+  },
+  {
+   "why": "possessive on a full name",
+   "text": "Jonas Weber's fund",
+   "expect": "[[Jonas Weber]]'s fund",
+   "ambiguous": []
+  },
+  {
+   "why": "each note is linked once",
+   "text": "Maya and then Maya again",
+   "expect": "[[Maya Chen|Maya]] and then Maya again",
+   "ambiguous": []
+  },
+  {
+   "why": "two people called Sam: never guess",
+   "text": "met Sam today",
+   "expect": "met Sam today",
+   "ambiguous": [
+    "Sam"
+   ]
+  },
+  {
+   "why": "the longer name wins",
+   "text": "met Sam Patel today",
+   "expect": "met [[Sam Patel]] today",
+   "ambiguous": []
+  },
+  {
+   "why": "a bare Sam is still ambiguous",
+   "text": "Sam Okafor and Sam",
+   "expect": "[[Sam Okafor]] and Sam",
+   "ambiguous": [
+    "Sam"
+   ]
+  },
+  {
+   "why": "frontmatter alias",
+   "text": "Northwind is leading",
+   "expect": "[[Northwind Capital|Northwind]] is leading",
+   "ambiguous": []
+  },
+  {
+   "why": "aliases of 4+ letters match in any case",
+   "text": "NORTHWIND is leading",
+   "expect": "[[Northwind Capital|NORTHWIND]] is leading",
+   "ambiguous": []
+  },
+  {
+   "why": "alias with a space",
+   "text": "Maya C said so",
+   "expect": "[[Maya Chen|Maya C]] said so",
+   "ambiguous": []
+  },
+  {
+   "why": "short alias, exact case",
+   "text": "we talked MM",
+   "expect": "we talked [[Market Making|MM]]",
+   "ambiguous": []
+  },
+  {
+   "why": "names of 3 letters or fewer must match case exactly",
+   "text": "we talked mm",
+   "expect": "we talked mm",
+   "ambiguous": []
+  },
+  {
+   "why": "short name, exact case",
+   "text": "AI is everywhere",
+   "expect": "[[AI]] is everywhere",
+   "ambiguous": []
+  },
+  {
+   "why": "never inside a word, never lowercase short names",
+   "text": "she said it was fair",
+   "expect": "she said it was fair",
+   "ambiguous": []
+  },
+  {
+   "why": "single letters never link",
+   "text": "Had a call with X",
+   "expect": "Had a call with X",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "ETF flows were up",
+   "expect": "[[ETF]] flows were up",
+   "ambiguous": []
+  },
+  {
+   "why": "short name in the wrong case",
+   "text": "etf flows were up",
+   "expect": "etf flows were up",
+   "ambiguous": []
+  },
+  {
+   "why": "whole words only",
+   "text": "ETFs were up",
+   "expect": "ETFs were up",
+   "ambiguous": []
+  },
+  {
+   "why": "dots inside a name; linked once",
+   "text": "JPM and J.P. Morgan",
+   "expect": "[[J.P. Morgan|JPM]] and J.P. Morgan",
+   "ambiguous": []
+  },
+  {
+   "why": "dots inside a name",
+   "text": "J.P. Morgan desk",
+   "expect": "[[J.P. Morgan]] desk",
+   "ambiguous": []
+  },
+  {
+   "why": "multi-word topic in lowercase",
+   "text": "the market making desk",
+   "expect": "the [[Market Making|market making]] desk",
+   "ambiguous": []
+  },
+  {
+   "why": "first words are derived only for people",
+   "text": "Deep dive tomorrow",
+   "expect": "Deep dive tomorrow",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "read Deep Work again",
+   "expect": "read [[Deep Work]] again",
+   "ambiguous": []
+  },
+  {
+   "why": "unicode first name",
+   "text": "Léa is in Lyon",
+   "expect": "[[Léa Dubois|Léa]] is in Lyon",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "Léa Dubois is in Lyon",
+   "expect": "[[Léa Dubois]] is in Lyon",
+   "ambiguous": []
+  },
+  {
+   "why": "curly apostrophe matches straight one; text kept as typed",
+   "text": "Chloé d’Arcy called",
+   "expect": "[[Chloé d'Arcy|Chloé d’Arcy]] called",
+   "ambiguous": []
+  },
+  {
+   "why": "hyphenated first name",
+   "text": "Anne-Marie called",
+   "expect": "[[Anne-Marie Roux|Anne-Marie]] called",
+   "ambiguous": []
+  },
+  {
+   "why": "person by tag (people/friends), not folder",
+   "text": "Ola said hi",
+   "expect": "[[Ola Bello|Ola]] said hi",
+   "ambiguous": []
+  },
+  {
+   "why": "dotted name; linked once",
+   "text": "Node.js and node.js",
+   "expect": "[[Node.js]] and node.js",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "Native Records signed them",
+   "expect": "[[Native Records]] signed them",
+   "ambiguous": []
+  },
+  {
+   "why": "'The' is never a first name",
+   "text": "The Native wrote about it",
+   "expect": "[[The Native]] wrote about it",
+   "ambiguous": []
+  },
+  {
+   "why": "companies don't get derived short names",
+   "text": "Native",
+   "expect": "Native",
+   "ambiguous": []
+  },
+  {
+   "why": "two notes share the name",
+   "text": "Harbor launch",
+   "expect": "Harbor launch",
+   "ambiguous": [
+    "Harbor"
+   ]
+  },
+  {
+   "why": "linked once",
+   "text": "Python and python",
+   "expect": "[[Python]] and python",
+   "ambiguous": []
+  },
+  {
+   "why": "names without letters (daily notes) never link",
+   "text": "2026-10-06 recap",
+   "expect": "2026-10-06 recap",
+   "ambiguous": []
+  },
+  {
+   "why": "punctuation is a boundary",
+   "text": "Maya,Jonas",
+   "expect": "[[Maya Chen|Maya]],[[Jonas Weber|Jonas]]",
+   "ambiguous": []
+  },
+  {
+   "why": "whole words only",
+   "text": "Mayas and Lumens",
+   "expect": "Mayas and Lumens",
+   "ambiguous": []
+  },
+  {
+   "why": "already linked in the text",
+   "text": "[[Maya Chen]] and Maya",
+   "expect": "[[Maya Chen]] and Maya",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "[[Lumen Labs|Lumen]] then Maya",
+   "expect": "[[Lumen Labs|Lumen]] then [[Maya Chen|Maya]]",
+   "ambiguous": []
+  },
+  {
+   "why": "",
+   "text": "[[Daily/2026-10-06|yesterday]] with Maya",
+   "expect": "[[Daily/2026-10-06|yesterday]] with [[Maya Chen|Maya]]",
+   "ambiguous": []
+  },
+  {
+   "why": "inline code",
+   "text": "see `Maya` in code",
+   "expect": "see `Maya` in code",
+   "ambiguous": []
+  },
+  {
+   "why": "urls",
+   "text": "see https://lumen.example/Maya",
+   "expect": "see https://lumen.example/Maya",
+   "ambiguous": []
+  },
+  {
+   "why": "emails",
+   "text": "mail maya.chen@lumen.example",
+   "expect": "mail maya.chen@lumen.example",
+   "ambiguous": []
+  },
+  {
+   "why": "tags",
+   "text": "tagged #Lumen",
+   "expect": "tagged #Lumen",
+   "ambiguous": []
+  },
+  {
+   "why": "markdown links",
+   "text": "[Maya](https://maya.example) site",
+   "expect": "[Maya](https://maya.example) site",
+   "ambiguous": []
+  },
+  {
+   "why": "inline maths",
+   "text": "price $Python$ math",
+   "expect": "price $Python$ math",
+   "ambiguous": []
+  },
+  {
+   "why": "non-breaking space after a name",
+   "text": "Maya Chen x",
+   "expect": "[[Maya Chen]] x",
+   "ambiguous": []
+  },
+  {
+   "why": "pipes escaped inside tables",
+   "text": "| Maya | Lumen |",
+   "expect": "| [[Maya Chen\\|Maya]] | [[Lumen Labs\\|Lumen]] |",
+   "ambiguous": [],
+   "table": true
+  }
+ ],
+ "documents": [
+  {
+   "why": "frontmatter, code blocks and headings are left alone; already-linked notes are skipped",
+   "self": "Jonas Weber",
+   "text": "---\naliases: [Maya]\n---\n# Maya notes\n\nMet Maya at Lumen.\n\n```\nMaya in code\n```\n\nJonas and [[Northwind Capital]]; Northwind again. Maya again.\n",
+   "expect": "---\naliases: [Maya]\n---\n# Maya notes\n\nMet [[Maya Chen|Maya]] at [[Lumen Labs|Lumen]].\n\n```\nMaya in code\n```\n\nJonas and [[Northwind Capital]]; Northwind again. Maya again.\n"
+  },
+  {
+   "why": "windows line endings are kept",
+   "self": null,
+   "text": "Lumen call\r\nwith Maya\r\n",
+   "expect": "[[Lumen Labs|Lumen]] call\r\nwith [[Maya Chen|Maya]]\r\n"
+  }
+ ]
+}
