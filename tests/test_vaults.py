@@ -34,7 +34,7 @@ def test_config_round_trip_with_quotes_and_unicode(tmp_path):
     cfg = {"default": "Léa's \"vault\"", "vaults": {"Léa's \"vault\"": {
         "path": str(tmp_path), "heading": "## Log", "time_prefix": False, "ignore": ["Home", "To-do"]}}}
     save_config(cfg)
-    assert tomllib.loads(config_path().read_text()) == cfg
+    assert tomllib.loads(config_path().read_text(encoding="utf-8")) == cfg
     assert load_config() == cfg
 
 

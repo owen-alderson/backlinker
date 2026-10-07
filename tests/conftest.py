@@ -20,6 +20,7 @@ def isolated(tmp_path, monkeypatch):
     for var in ("XDG_CONFIG_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME"):
         monkeypatch.setenv(var, str(tmp_path / "xdg" / var))
     monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setattr(Path, "home", lambda: tmp_path / "home")  # Windows ignores $HOME
     monkeypatch.delenv("BACKLINKER_VAULT", raising=False)
     monkeypatch.setenv("NO_COLOR", "1")
     monkeypatch.setattr(vaults, "obsidian_registry_paths", lambda: [tmp_path / "obsidian.json"])

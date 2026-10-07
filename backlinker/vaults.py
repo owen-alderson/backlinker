@@ -182,7 +182,7 @@ class Vault:
 def _v1_vault() -> Path | None:
     """obsidian-quick-add v1 kept its vault in ~/.config/obsidian-quick-add/config.json."""
     try:
-        old = json.loads((Path.home() / ".config/obsidian-quick-add/config.json").read_text())
+        old = json.loads((Path.home() / ".config/obsidian-quick-add/config.json").read_text(encoding="utf-8"))
         return Path(old["vault"]).expanduser()
     except (OSError, ValueError, KeyError, TypeError):
         return None
