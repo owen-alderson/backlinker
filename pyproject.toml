@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "backlinker"
+version = "2.0.0"
+description = "Capture a line from your terminal into today's Obsidian daily note, with [[links]] to the people, companies and topics already in your vault."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Owen Alderson" }]
+keywords = ["obsidian", "notes", "wikilinks", "daily-notes", "cli", "pkm", "mcp"]
+classifiers = [
+    "Environment :: Console",
+    "Programming Language :: Python :: 3",
+    "Topic :: Office/Business",
+    "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = []
+
+[project.optional-dependencies]
+mcp = ["mcp>=2.3,<3"]
+dev = ["pytest>=8", "mcp>=2.3,<3", "anyio"]
+
+[project.scripts]
+backlinker = "backlinker.cli:main"
+bl = "backlinker.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/owen-alderson/backlinker"
+
+[tool.hatch.build.targets.wheel]
+packages = ["backlinker"]
+
+[tool.hatch.build.targets.sdist]
+include = ["backlinker", "tests", "spec", "README.md", "LICENSE"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

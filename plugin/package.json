@@ -1,0 +1,20 @@
+{
+  "name": "backlinker-obsidian-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backlinker for Obsidian: quick capture into today's daily note with links to existing notes.",
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && node esbuild.config.mjs",
+    "test": "vitest run",
+    "moment-cases": "node scripts/moment-cases.mjs"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "moment": "^2.31.0",
+    "obsidian": "1.13.1",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  }
+}
