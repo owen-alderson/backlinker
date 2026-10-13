@@ -64,9 +64,9 @@ def test_dossier_reads_without_writing_unless_asked(server, demo):
     got = call(server, "dossier", name="Maya")
     assert got["note"] == "People/Maya Chen.md" and got["mentions"] == 1 and not got["written"]
     assert got["timeline"][0]["day"] == "2026-10-01" and "Founder of [[Lumen Labs]]" in got["note_text"]
-    assert "backlinker:dossier" not in (demo.root / "People/Maya Chen.md").read_text()
+    assert "backlinker:dossier" not in (demo.root / "People/Maya Chen.md").read_text(encoding="utf-8")
     assert call(server, "dossier", name="Maya", write=True)["written"]
-    assert "backlinker:dossier" in (demo.root / "People/Maya Chen.md").read_text()
+    assert "backlinker:dossier" in (demo.root / "People/Maya Chen.md").read_text(encoding="utf-8")
 
 
 def test_guest_list_then_research_then_undo(server, demo):
@@ -78,11 +78,11 @@ def test_guest_list_then_research_then_undo(server, demo):
     added = call(server, "add_to_dossier", name="Dee Moss", section="Key Facts",
                  lines=["Founder of Moss Labs, previously at Lumen Labs"], sources=["https://moss.example/about"])
     assert added["files"]["People/Dee Moss.md"][0] == "- Founder of Moss Labs, previously at [[Lumen Labs]]"
-    text = (demo.root / "People/Dee Moss.md").read_text()
+    text = (demo.root / "People/Dee Moss.md").read_text(encoding="utf-8")
     assert "## Sources\n- https://moss.example/about\n" in text
 
     assert call(server, "undo_last")["undone"].startswith("mcp: Key Facts")
-    assert "Moss Labs, previously" not in (demo.root / "People/Dee Moss.md").read_text()
+    assert "Moss Labs, previously" not in (demo.root / "People/Dee Moss.md").read_text(encoding="utf-8")
 
 
 def test_add_to_dossier_needs_a_source(server):
