@@ -28,7 +28,8 @@ def call(server, tool, **args):
 
 
 def test_lists_tools(server):
-    assert sorted(call(server, None)) == ["capture", "find_note", "preview_links", "undo_last"]
+    assert sorted(call(server, None)) == ["add_to_dossier", "capture", "dossier", "find_note", "guest_list",
+                                          "preview_links", "undo_last"]
 
 
 def test_preview_writes_nothing(server, demo):
@@ -57,3 +58,37 @@ def test_find_note(server):
     rows = call(server, "find_note", query="northwind")
     assert rows[0]["path"] == "Companies/Northwind Capital.md" and rows[0]["aliases"] == ["Northwind"]
     assert call(server, "find_note", query="zzzz") == []
+
+
+def test_dossier_reads_without_writing_unless_asked(server, demo):
+    got = call(server, "dossier", name="Maya")
+    assert got["note"] == "People/Maya Chen.md" and got["mentions"] == 1 and not got["written"]
+    assert got["timeline"][0]["day"] == "2026-10-01" and "Founder of [[Lumen Labs]]" in got["note_text"]
+    assert "backlinker:dossier" not in (demo.root / "People/Maya Chen.md").read_text(encoding="utf-8")
+    assert call(server, "dossier", name="Maya", write=True)["written"]
+    assert "backlinker:dossier" in (demo.root / "People/Maya Chen.md").read_text(encoding="utf-8")
+
+
+def test_guest_list_then_research_then_undo(server, demo):
+    got = call(server, "guest_list", guests=["Maya Chen - Lumen", "Dee Moss, Founder at Moss Labs"],
+               pick=["Dee Moss"], event="Harbor Launch")
+    assert [(g["name"], g["status"]) for g in got["guests"]] == [("Maya Chen", "known"), ("Dee Moss", "new")]
+    assert "People/Dee Moss.md" in got["files"] and got["files"]["Projects/Harbor Launch.md"] == ["- [[Dee Moss]]"]
+
+    added = call(server, "add_to_dossier", name="Dee Moss", section="Key Facts",
+                 lines=["Founder of Moss Labs, previously at Lumen Labs"], sources=["https://moss.example/about"])
+    assert added["files"]["People/Dee Moss.md"][0] == "- Founder of Moss Labs, previously at [[Lumen Labs]]"
+    text = (demo.root / "People/Dee Moss.md").read_text(encoding="utf-8")
+    assert "## Sources\n- https://moss.example/about\n" in text
+
+    assert call(server, "undo_last")["undone"].startswith("mcp: Key Facts")
+    assert "Moss Labs, previously" not in (demo.root / "People/Dee Moss.md").read_text(encoding="utf-8")
+
+
+def test_add_to_dossier_needs_a_source(server):
+    async def go():
+        async with Client(server) as client:
+            return await client.call_tool("add_to_dossier", {"name": "Maya", "section": "Key Facts",
+                                                             "lines": ["CEO"], "sources": []})
+    res = anyio.run(go)
+    assert res.is_error and "source" in res.content[0].text
