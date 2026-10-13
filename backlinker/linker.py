@@ -27,6 +27,11 @@ PROTECTED = re.compile(
     r"|\$[^$\n]+\$"                  # inline maths
 )
 WIKILINK = re.compile(r"!?\[\[([^\]|#^\n]*)[^\]\n]*\]\]")
+# The block `bl dossier` rebuilds at the end of a person's note. Nothing else writes inside it.
+DOSSIER_START = "<!-- backlinker:dossier"
+DOSSIER_END = "<!-- /backlinker:dossier -->"
+DOSSIER_BLOCK = re.compile(r"^[ \t]*" + re.escape(DOSSIER_START) + r".*?(?:^[ \t]*" + re.escape(DOSSIER_END) + r"|\Z)",
+                           re.S | re.M)
 # First words that are not first names ("The Native", "New Balance").
 NOT_FIRST_NAMES = {"the", "a", "an", "new", "old", "my", "our", "your", "mr", "mrs", "ms", "dr",
                    "prof", "sir", "st", "saint", "san", "los", "las", "el", "la", "le", "de", "van",
@@ -182,15 +187,15 @@ class Linker:
         yield pos, len(text)
 
     def link_document(self, text: str, self_target: str | None = None) -> Result:
-        """Link unlinked mentions across a whole note, skipping frontmatter, code blocks and
-        headings, and any note the document already links to."""
-        skip = {m.group(1) for m in WIKILINK.finditer(text)}
+        """Link unlinked mentions across a whole note, skipping frontmatter, code blocks, dossier
+        blocks and headings, and any note the document already links to."""
+        skip = {m.group(1) for m in WIKILINK.finditer(DOSSIER_BLOCK.sub("", text))}
         if self_target:
             skip.add(self_target)
         lines = text.splitlines(keepends=True)
         out, res = [], Result(text)
         in_front = bool(lines) and lines[0].strip() == "---"
-        fence = None
+        fence, in_dossier = None, False
         offset = 0
         for n, line in enumerate(lines):
             stripped = line.strip()
@@ -202,6 +207,12 @@ class Linker:
                 out.append(line)
                 if stripped.startswith(fence):
                     fence = None
+            elif in_dossier:
+                out.append(line)
+                in_dossier = not stripped.startswith(DOSSIER_END)
+            elif stripped.startswith(DOSSIER_START):
+                in_dossier = True
+                out.append(line)
             elif stripped.startswith(("```", "~~~")):
                 fence = stripped[:3]
                 out.append(line)

@@ -4,13 +4,10 @@ import difflib
 import re
 from pathlib import PurePosixPath
 
-from backlinker.linker import Linker, key
+from backlinker.linker import DOSSIER_END, DOSSIER_START, Linker, key
 
 _HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
-# The block `bl dossier` rebuilds in a person's note. Nothing else writes inside it.
-DOSSIER_START = "<!-- backlinker:dossier"
-DOSSIER_END = "<!-- /backlinker:dossier -->"
 
 
 def notes_from(entries, people_folders):

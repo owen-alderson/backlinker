@@ -4,7 +4,7 @@ import {
 } from "obsidian";
 import { findDue } from "./dates";
 import { insertLines } from "./insert";
-import { Linker, Result, notesFrom, protectedRe } from "./linker";
+import { Linker, Result, dossierRanges, notesFrom, protectedRe } from "./linker";
 
 interface Settings {
   heading: string;
@@ -128,7 +128,14 @@ export default class BacklinkerPlugin extends Plugin {
     let r: Result;
     if (editor.somethingSelected()) {
       const whole = editor.getValue();
-      const already = [...whole.matchAll(/!?\[\[([^\]|#^\n]*)/g)].map((m) => m[1]);
+      const from = editor.posToOffset(editor.getCursor("from")), to = editor.posToOffset(editor.getCursor("to"));
+      const blocks = dossierRanges(whole);
+      if (blocks.some(([a, b]) => from < b && to > a)) {
+        new Notice("Backlinker: the selection touches the dossier block, which bl dossier rebuilds. Nothing linked.");
+        return;
+      }
+      const outside = blocks.reduceRight((t, [a, b]) => t.slice(0, a) + t.slice(b), whole);
+      const already = [...outside.matchAll(/!?\[\[([^\]|#^\n]*)/g)].map((m) => m[1]);
       r = linker.link(editor.getSelection(), self ? [...already, self] : already);
       if (r.links.length) editor.replaceSelection(r.text);
     } else {
