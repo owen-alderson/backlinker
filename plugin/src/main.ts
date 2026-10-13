@@ -1,5 +1,5 @@
 import {
-  App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile,
+  App, Editor, MarkdownFileInfo, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, type SettingDefinitionControl,
   moment, normalizePath, parseFrontMatterAliases, parseFrontMatterTags,
 } from "obsidian";
 import { findDue } from "./dates";
@@ -214,21 +214,37 @@ class CaptureModal extends Modal {
 class BacklinkerSettings extends PluginSettingTab {
   constructor(app: App, private plugin: BacklinkerPlugin) { super(app, plugin); }
 
+  // Obsidian 1.13+ renders these and indexes them for settings search; display() draws the same list on older versions.
+  getSettingDefinitions(): SettingDefinitionControl<keyof Settings & string>[] {
+    return [
+      { name: "Heading", desc: "Add captures under this heading in the daily note, e.g. ## Log. Empty: end of the note.",
+        control: { type: "text", key: "heading", placeholder: "## Log" } },
+      { name: "Time prefix", desc: "Start each line with the time, like - 14:32 …", control: { type: "toggle", key: "timePrefix" } },
+      { name: "Due date format", desc: "How a task's due date is written.",
+        control: { type: "dropdown", key: "dueFormat", options: { tasks: "Tasks plugin (📅 2026-10-09)", dataview: "Dataview ([due:: 2026-10-09])" } } },
+      { name: "People folders", desc: "Comma-separated. Notes here (or tagged #person) also link by unique first name.",
+        control: { type: "text", key: "peopleFolders" } },
+      { name: "Never link", desc: "Comma-separated note names or aliases to leave alone.", control: { type: "text", key: "ignore" } },
+    ];
+  }
+
+  getControlValue(key: string): unknown { return this.plugin.settings[key as keyof Settings]; }
+
+  async setControlValue(key: string, value: unknown) {
+    (this.plugin.settings as unknown as Record<string, unknown>)[key] = value;
+    await this.plugin.saveSettings();
+  }
+
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    const s = this.plugin.settings;
-    const save = () => this.plugin.saveSettings();
-    new Setting(containerEl).setName("Heading").setDesc("Add captures under this heading in the daily note, e.g. ## Log. Empty: end of the note.")
-      .addText((t) => t.setPlaceholder("## Log").setValue(s.heading).onChange(async (v) => { s.heading = v; await save(); }));
-    new Setting(containerEl).setName("Time prefix").setDesc("Start each line with the time, like - 14:32 …")
-      .addToggle((t) => t.setValue(s.timePrefix).onChange(async (v) => { s.timePrefix = v; await save(); }));
-    new Setting(containerEl).setName("Due date format").setDesc("How a task's due date is written.")
-      .addDropdown((d) => d.addOptions({ tasks: "Tasks plugin (📅 2026-10-09)", dataview: "Dataview ([due:: 2026-10-09])" })
-        .setValue(s.dueFormat).onChange(async (v) => { s.dueFormat = v as Settings["dueFormat"]; await save(); }));
-    new Setting(containerEl).setName("People folders").setDesc("Comma-separated. Notes here (or tagged #person) also link by unique first name.")
-      .addText((t) => t.setValue(s.peopleFolders).onChange(async (v) => { s.peopleFolders = v; await save(); }));
-    new Setting(containerEl).setName("Never link").setDesc("Comma-separated note names or aliases to leave alone.")
-      .addText((t) => t.setValue(s.ignore).onChange(async (v) => { s.ignore = v; await save(); }));
+    for (const { name, desc, control: c } of this.getSettingDefinitions()) {
+      const setting = new Setting(containerEl).setName(name).setDesc(desc as string);
+      const value = this.getControlValue(c.key);
+      const save = (v: unknown) => this.setControlValue(c.key, v);
+      if (c.type === "toggle") setting.addToggle((t) => t.setValue(value as boolean).onChange(save));
+      else if (c.type === "dropdown") setting.addDropdown((d) => d.addOptions(c.options).setValue(value as string).onChange(save));
+      else if (c.type === "text") setting.addText((t) => t.setPlaceholder(c.placeholder ?? "").setValue(value as string).onChange(save));
+    }
   }
 }
