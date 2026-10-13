@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "backlinker"
-version = "2.0.0"
+version = "2.1.0"
 description = "Capture a line from your terminal into today's Obsidian daily note, with [[links]] to the people, companies and topics already in your vault."
 readme = "README.md"
 requires-python = ">=3.11"
