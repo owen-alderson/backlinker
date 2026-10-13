@@ -14,6 +14,8 @@ const PROTECTED_SRC = [
   String.raw`\$[^$\n]+\$`,
 ].join("|");
 const WIKILINK_SRC = String.raw`!?\[\[([^\]|#^\n]*)[^\]\n]*\]\]`;
+const DOSSIER_START = "<!-- backlinker:dossier";
+const DOSSIER_END = "<!-- /backlinker:dossier -->";
 
 export const protectedRe = () => new RegExp(PROTECTED_SRC, "gu");
 const tokenRe = () => new RegExp(TOKEN_SRC, "gu");
@@ -183,6 +185,7 @@ export class Linker {
     const out: string[] = [];
     let inFront = lines.length > 0 && lines[0].trim() === "---";
     let fence: string | null = null;
+    let inDossier = false;
     let offset = 0;
     lines.forEach((line, n) => {
       const s = line.trim();
@@ -192,6 +195,12 @@ export class Linker {
       } else if (fence) {
         out.push(line);
         if (s.startsWith(fence)) fence = null;
+      } else if (inDossier) {
+        out.push(line);
+        if (s.startsWith(DOSSIER_END)) inDossier = false;
+      } else if (s.startsWith(DOSSIER_START)) {
+        inDossier = true;
+        out.push(line);
       } else if (s.startsWith("```") || s.startsWith("~~~")) {
         fence = s.slice(0, 3);
         out.push(line);

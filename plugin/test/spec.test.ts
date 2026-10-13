@@ -18,6 +18,33 @@ describe("linker spec (shared with the Python CLI)", () => {
   });
 });
 
+describe("plugin-only linking behavior", () => {
+  it("skips backlinker dossier blocks in linkDocument", () => {
+    const linker = new Linker(notesFrom([
+      { path: "People/Maya Chen.md", aliases: [], tags: [] },
+      { path: "People/Sam Lee.md", aliases: [], tags: [] },
+    ], ["People"]));
+    const text = [
+      "Met Maya Chen today.",
+      "",
+      "<!-- backlinker:dossier: rebuilt by `bl dossier` -->",
+      "## Mentions",
+      "- Maya Chen and Sam Lee discussed Lumen.",
+      "<!-- /backlinker:dossier -->",
+      "",
+    ].join("\n");
+    expect(linker.linkDocument(text).text).toBe([
+      "Met [[Maya Chen]] today.",
+      "",
+      "<!-- backlinker:dossier: rebuilt by `bl dossier` -->",
+      "## Mentions",
+      "- Maya Chen and Sam Lee discussed Lumen.",
+      "<!-- /backlinker:dossier -->",
+      "",
+    ].join("\n"));
+  });
+});
+
 describe("date spec (shared with the Python CLI)", () => {
   const spec = read("date-cases.json");
   it.each(spec.due.map((c: any) => [c.text, c]))("due: %s", (_t, c: any) => {
