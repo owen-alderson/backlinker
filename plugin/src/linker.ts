@@ -176,7 +176,7 @@ export class Linker {
     return res;
   }
 
-  /** Link unlinked mentions across a note: skips frontmatter, code blocks, headings, %% comments. */
+  /** Link unlinked mentions across a note: skips frontmatter, code blocks, dossier blocks, headings, %% comments. */
   linkDocument(text: string, selfTarget: string | null = null): Result {
     const skip = new Set<string>([...text.matchAll(wikilinkRe())].map((m) => m[1]));
     if (selfTarget) skip.add(selfTarget);
