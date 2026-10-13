@@ -118,7 +118,7 @@ def test_config_show_set_get(vault, capsys):
 def test_version_and_help(capsys):
     with pytest.raises(SystemExit):
         run(["--version"])
-    assert "backlinker 2.0.0" in capsys.readouterr().out
+    assert "backlinker 2.1.0" in capsys.readouterr().out
 
 
 def test_triage_needs_a_terminal_or_all(vault, capsys, monkeypatch):
@@ -135,3 +135,35 @@ def test_mcp_without_package_explains(vault, capsys, monkeypatch):
                         lambda name, *a, **k: (_ for _ in ()).throw(ImportError()) if name.endswith("mcp_server")
                         else real(name, *a, **k))
     assert run(["mcp"]) == 1 and "backlinker[mcp]" in capsys.readouterr().err
+
+
+def test_dossier(vault, capsys):
+    assert run(["dossier", "Maya", "-n"]) == 0
+    out = capsys.readouterr().out
+    assert "People/Maya Chen.md\n  1 mention in 1 note · first 2026-10-01" in out and "dry run" in out
+    assert "backlinker:dossier" not in (vault.root / "People/Maya Chen.md").read_text(encoding="utf-8")
+    assert run(["dossier", "Maya"]) == 0
+    assert "- 2026-10-01 · [[Jonas Weber]]: 2026-10-01 intro from Maya" in (vault.root / "People/Maya Chen.md").read_text(encoding="utf-8")
+    capsys.readouterr()
+    assert run(["dossier", "Maya", "--json"]) == 0
+    data = json.loads(capsys.readouterr().out)
+    assert data["timeline"][0]["source"] == "People/Jonas Weber.md" and data["written"] == []
+
+
+def test_dossier_unknown_person(vault, capsys):
+    assert run(["dossier", "Nobody Here"]) == 1
+    assert "no note called 'Nobody Here'" in capsys.readouterr().err
+
+
+def test_guests_report_then_pick(vault, tmp_path, capsys):
+    f = tmp_path / "mixer.txt"
+    f.write_text("- Maya Chen - Lumen\n- Dee Moss\n- Sam\n")
+    assert run(["guests", str(f)]) == 0
+    out = capsys.readouterr().out
+    assert "mixer.txt: 3 guests" in out and "you know (1): Maya Chen" in out and "new to you (1): Dee Moss" in out
+    assert "Sam is close to Sam Okafor / Sam Patel" in out
+    assert "--pick" in out
+    assert run(["guests", str(f), "--pick", "Dee"]) == 0
+    assert "on the guest list for mixer" in (vault.root / "People/Dee Moss.md").read_text(encoding="utf-8")
+    assert run(["guests", str(f), "--pick", "Zed"]) == 1
+    assert "isn't on the guest list" in capsys.readouterr().err

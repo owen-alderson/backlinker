@@ -18,7 +18,7 @@ Because the line links those notes, it shows up in each note's **backlinks**: op
 - **Private.** No network, no AI, no account. Nothing leaves your vault, and the CLI has no dependencies beyond Python.
 - **Safe.** Every change is one `bl undo` away, and it will never overwrite a note that changed under it.
 
-Also included: tasks with due dates, filing into a specific note, retro-linking old notes, an inbox you can fill from your phone, an MCP server so Claude can file notes for you, and an Obsidian plugin.
+Also included: tasks with due dates, filing into a specific note, retro-linking old notes, an inbox you can fill from your phone, people dossiers built from your own notes (and from an event's guest list), an MCP server so Claude can file notes and research people for you, and an Obsidian plugin.
 
 ## Quickstart
 
@@ -42,6 +42,8 @@ bl "first note with Maya"
 | `echo "..." \| bl -` | Reads stdin, one entry per line |
 | `bl link "Meeting notes"` | Links every unlinked mention in an existing note (`-n` to preview) |
 | `bl triage` | Walks through your `Inbox.md` and files each line |
+| `bl dossier Jonas` | Gathers everything your vault says about Jonas into his note |
+| `bl guests list.csv --pick Omar` | Who you know on an event's guest list; starts notes for the people you pick |
 | `bl undo` | Takes back the last change, across every file it touched |
 | `bl --json ...` | Machine-readable output for scripts, Raycast, Alfred, Shortcuts |
 
@@ -88,6 +90,58 @@ $ bl triage
 
 A line starting with a date (`2026-10-06 18:40 …`, which Shortcuts can add for you) goes to that day's note at that time. Each line leaves the inbox in the same undo step that files it, and only once it has been written to its new note. `bl triage --all` files everything without asking.
 
+### People dossiers
+
+`bl dossier` reads every note for mentions of a person and writes what it finds into their note: when they come up, the open tasks that involve them, who and what they're mentioned with, and a timeline linking back to each source.
+
+```console
+$ bl dossier Jonas
+People/Jonas Weber.md
+  3 mentions in 3 notes · first 2026-10-05 · last 2026-10-06
+  1 open task
+  mentioned with Maya Chen, Northwind Capital, Lumen Labs
+```
+
+```markdown
+## From the vault
+
+**3 mentions in 3 notes** · first 2026-10-05 · last 2026-10-06
+
+**Open tasks**
+- send Jonas the term sheet 📅 2026-10-09 ([[2026-10-06]])
+
+**Mentioned with** [[Maya Chen]] (1) · [[Northwind Capital]] (1) · [[Lumen Labs]] (1)
+
+**Timeline**
+- 2026-10-06 · [[Inbox]]: 2026-10-06 18:40 Jonas thinks Northwind will lead the round
+- [[2026-10-06]]: send Jonas the term sheet 📅 2026-10-09
+- [[2026-10-05]]: lunch with Jonas and Maya, Northwind wants the Lumen deck
+```
+
+- Mentions follow the linker's rules, so plain-text mentions count too (and are reported, so `bl link` can link them).
+- The block sits between two hidden markers at the end of the note. Running it again rebuilds only that block; everything you wrote stays as it is. Tasks are copied without their checkbox, so they don't show up twice in the Tasks plugin.
+- A mention is dated by its daily note, by a date at the start of the line, or by a date in the note's name. Anything else is listed under **Also in**.
+- `--create` starts a person note (in the folder where your people already live) when there isn't one. `--json` lists every mention.
+
+**Before an event.** Export the guest list (Luma, Eventbrite or any CSV with a name column, or a plain list, one guest per line) and see who you already know:
+
+```console
+$ bl guests founders-night.csv
+founders-night.csv: 4 guests
+  you know (1): Maya Chen
+? Sam is close to Sam Okafor / Sam Patel; add an alias if it's the same person
+  new to you (2): Omar Haddad, Li Wei
+
+$ bl guests founders-night.csv --pick Omar --pick Maya --event "Founders Night"
+founders-night.csv: 4 guests
+  ...
+✓ People/Omar Haddad.md
+✓ People/Maya Chen.md
+✓ Events/Founders Night.md
+```
+
+New people get a note with what the list says about them (title, company, email); people you know get a dated line and a fresh dossier block; the event's note gets a **People to meet** list. A guest only matches a note by exact name or alias, so a near match is shown to you, never merged. Then ask Claude to research them (below).
+
 ## Obsidian plugin
 
 The same linker runs inside Obsidian, on desktop and **mobile**:
@@ -106,7 +160,9 @@ pipx install 'backlinker[mcp]'          # or: pipx inject backlinker mcp
 claude mcp add backlinker -- bl mcp     # Claude Code; any MCP client can run `bl mcp`
 ```
 
-Tools: `capture` (with `task`, `day`, `to`, `dry_run`), `preview_links`, `find_note`, `undo_last`. Ask Claude to "log that I agreed the pricing with Maya" and it lands in your daily note, linked, using the same rules as everything else.
+Tools: `capture` (with `task`, `day`, `to`, `dry_run`), `preview_links`, `find_note`, `dossier`, `guest_list`, `add_to_dossier`, `undo_last`. Ask Claude to "log that I agreed the pricing with Maya" and it lands in your daily note, linked, using the same rules as everything else.
+
+**Research people before an event.** Share the guest list in any form (a PDF, a screenshot, a CSV) and say who you want to meet. Claude matches it against your vault with `guest_list`, reads what you already know with `dossier`, researches the rest on the web, and writes it into each note with `add_to_dossier`. backlinker itself stays offline: the research is Claude's, and `add_to_dossier` refuses any fact without a source, so every addition is listed under **Sources**. `bl undo` takes back each step.
 
 ## Configuration
 

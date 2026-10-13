@@ -77,6 +77,42 @@ def format_moment(when: date | datetime, fmt: str) -> str:
     return _MOMENT_TOKEN.sub(token, fmt)
 
 
+def parse_moment(text: str, fmt: str) -> date | None:
+    """The date `text` was formatted from with `fmt` (a daily note's name), or None.
+
+    Only year, month and day tokens are read; the result must format back to exactly `text`,
+    so a name that merely looks like a date is never misread."""
+    groups = {"YYYY": r"(?P<Y>\d{4})", "YY": r"(?P<y>\d{2})", "MMMM": f"(?P<B>{'|'.join(MONTHS)})",
+              "MMM": f"(?P<b>{'|'.join(m[:3] for m in MONTHS)})", "MM": r"(?P<m>\d{2})", "M": r"(?P<m>\d{1,2})",
+              "Do": r"(?P<d>\d{1,2})(?:st|nd|rd|th)", "DD": r"(?P<d>\d{2})", "D": r"(?P<d>\d{1,2})"}
+    seen, parts, pos = set(), [], 0
+    for m in _MOMENT_TOKEN.finditer(fmt):
+        parts.append(re.escape(fmt[pos:m.start()]))
+        t, pos = m.group(), m.end()
+        if t.startswith("["):
+            parts.append(re.escape(t[1:-1]))
+        elif t in groups and groups[t][4] not in seen:
+            seen.add(groups[t][4])
+            parts.append(groups[t])
+        else:
+            parts.append(r"\w+?" if t not in ("X",) else r"\d+")
+    parts.append(re.escape(fmt[pos:]))
+    m = re.fullmatch("".join(parts), text)
+    if not m:
+        return None
+    g = m.groupdict()
+    year = int(g["Y"]) if g.get("Y") else 2000 + int(g["y"]) if g.get("y") else None
+    month = (int(g["m"]) if g.get("m") else MONTHS.index(g["B"]) + 1 if g.get("B")
+             else [x[:3] for x in MONTHS].index(g["b"]) + 1 if g.get("b") else None)
+    if None in (year, month) or not g.get("d"):
+        return None
+    try:
+        d = date(year, month, int(g["d"]))
+    except ValueError:
+        return None
+    return d if format_moment(d, fmt) == text else None
+
+
 # ── Date phrases ──────────────────────────────────────────────────────────────
 
 _WEEKDAYS = {

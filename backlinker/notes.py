@@ -8,6 +8,9 @@ from backlinker.linker import Linker, key
 
 _HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*\s*$")
 _LIST_ITEM = re.compile(r"^\s*(?:[-*+]|\d+[.)])\s")
+# The block `bl dossier` rebuilds in a person's note. Nothing else writes inside it.
+DOSSIER_START = "<!-- backlinker:dossier"
+DOSSIER_END = "<!-- /backlinker:dossier -->"
 
 
 def notes_from(entries, people_folders):
@@ -16,6 +19,10 @@ def notes_from(entries, people_folders):
 
 
 class NoteNotFound(LookupError):
+    pass
+
+
+class AmbiguousNote(NoteNotFound):
     pass
 
 
@@ -32,7 +39,7 @@ def find_note(entries: list[tuple[str, list[str], list[str]]], query: str,
     if len(hits) == 1:
         return hits[0]
     if hits:
-        raise NoteNotFound(f"{query!r} matches {len(hits)} notes: " + ", ".join(h[:-3] for h in hits))
+        raise AmbiguousNote(f"{query!r} matches {len(hits)} notes: " + ", ".join(h[:-3] for h in hits))
     names = {PurePosixPath(rel).stem: rel for rel, _, _ in entries}
     close = difflib.get_close_matches(query, list(names), n=3, cutoff=0.6)
     hint = f"; did you mean {' or '.join(repr(c) for c in close)}?" if close else ""
@@ -46,8 +53,13 @@ def _parse_heading(line: str) -> tuple[int, str] | None:
 
 def insert_lines(text: str, new: list[str], heading: str = "", nl: str = "\n") -> str:
     """Add `new` lines at the end of the section under `heading` (any level if it has no #s),
-    creating the heading at the end of the note if it's missing. No heading: end of the note."""
+    creating the heading at the end of the note if it's missing. No heading: end of the note.
+    A dossier block counts as the end of the note, so it stays last and whole."""
     lines = text.splitlines(keepends=True)
+    block = next((i for i, l in enumerate(lines) if l.lstrip().startswith(DOSSIER_START)), None)
+    if block is not None:
+        head = insert_lines("".join(lines[:block]), new, heading, nl)
+        return head.rstrip("\r\n") + nl + nl + "".join(lines[block:])
     want = (heading.lstrip().startswith("#") and _parse_heading(heading)) or (None, heading.strip().casefold())
 
     # Map headings, ignoring frontmatter and fenced code.

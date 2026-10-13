@@ -14,7 +14,7 @@ from backlinker import daily, journal, safewrite
 from backlinker.dates import find_due
 from backlinker.index import link_targets, load_notes, notes_from, scan
 from backlinker.linker import PROTECTED, Linker, Result
-from backlinker.notes import find_note, insert_lines
+from backlinker.notes import DOSSIER_START, find_note, insert_lines
 from backlinker.vaults import Vault
 
 _TASK = re.compile(r"^(?:[-*+]\s+)?(?:\[ ?\]\s*|todo:?\s+)", re.IGNORECASE)
@@ -172,9 +172,11 @@ def plan_link(vault: Vault, query: str) -> Capture:
     snap = safewrite.read(path)
     if snap.text is None:
         raise FileNotFoundError(rel)
-    r = linker_for(vault, entries).link_document(snap.text, self_target=targets.get(rel, rel[:-3]))
+    # A dossier block is rebuilt by `bl dossier`; link only what comes before it.
+    cut = next((m.start() for m in re.finditer(r"^[ \t]*" + re.escape(DOSSIER_START), snap.text, re.M)), len(snap.text))
+    r = linker_for(vault, entries).link_document(snap.text[:cut], self_target=targets.get(rel, rel[:-3]))
     cap = Capture(vault, date.today(), links=r.targets, ambiguous=r.ambiguous)
-    if r.text != snap.text:
-        cap.edits = [Edit(snap, r.text)]
+    if r.text + snap.text[cut:] != snap.text:
+        cap.edits = [Edit(snap, r.text + snap.text[cut:])]
         cap.lines[rel] = [f"[[{l.target}]] ← {l.text!r}" for l in r.links]
     return cap

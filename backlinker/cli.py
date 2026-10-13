@@ -7,6 +7,8 @@
   echo "..." | bl -                          from stdin, one entry per line
   bl link "Meeting notes"                    link unlinked mentions in a note
   bl triage                                  file each line of Inbox.md
+  bl dossier "Maya"                          what the vault says about a person, in their note
+  bl guests list.csv --pick "Jane Doe"       who you know on a guest list; notes for your picks
   bl undo                                    take back the last change
 """
 
@@ -24,7 +26,7 @@ from backlinker.notes import NoteNotFound
 from backlinker.vaults import (VaultError, coerce_setting, config_path, discover_vaults, load_config,
                                resolve_vault, save_config, SETTING_NAMES, VaultSettings)
 
-COMMANDS = ("add", "init", "config", "link", "triage", "undo", "mcp")
+COMMANDS = ("add", "init", "config", "link", "triage", "dossier", "guests", "undo", "mcp")
 
 
 class Out:
@@ -104,6 +106,87 @@ def cmd_link(args, out: Out) -> int:
         if cap.edits:
             out.head(cap.edits[0].path.relative_to(vault.root).as_posix())
     _report(out, cap, args.dry_run)
+    return 0
+
+
+def _write(out: Out, cap: Capture, dry: bool, summary: str) -> None:
+    if dry:
+        for e in cap.edits:
+            print(e.diff(cap.vault.root), end="")
+        out.dim("dry run: nothing was written")
+    elif cap.edits:
+        apply(cap, summary)
+        out.dim("undo: bl undo")
+    else:
+        out.dim("nothing to change")
+
+
+def cmd_dossier(args, out: Out) -> int:
+    from backlinker.dossier import plan_dossier
+
+    vault = _vault(args)
+    cap, d = plan_dossier(vault, args.name, create=args.create)
+    if out.json:
+        if not args.dry_run and cap.edits:
+            apply(cap, f"dossier {args.name}")
+        print(json.dumps({**d.to_dict(), "written": [] if args.dry_run else
+                          [e.path.relative_to(vault.root).as_posix() for e in cap.edits]}, ensure_ascii=False, indent=2))
+        return 0
+    s = d.to_dict()
+    out.head(d.rel)
+    if not d.mentions:
+        out.dim("  no mentions elsewhere in the vault yet")
+    else:
+        span = f" · first {s['first']} · last {s['last']}" if s["first"] else ""
+        print(f"  {s['mentions']} mention{'s' * (s['mentions'] != 1)} in {s['notes']} note{'s' * (s['notes'] != 1)}{span}")
+        if s["open_tasks"]:
+            print(f"  {len(s['open_tasks'])} open task{'s' * (len(s['open_tasks']) != 1)}")
+        if s["mentioned_with"]:
+            print("  mentioned with " + ", ".join(w["note"] for w in s["mentioned_with"][:5]))
+        if d.unlinked_in:
+            names = [p.rsplit("/", 1)[-1][:-3] for p in d.unlinked_in]
+            out.warn(f"{len(names)} note{'s' * (len(names) != 1)} mention them without a link: {', '.join(names[:5])}"
+                     + (" …" if len(names) > 5 else "") + f'  (bl link "{names[0]}" links one)')
+    _write(out, cap, args.dry_run, f"dossier {args.name}")
+    return 0
+
+
+def cmd_guests(args, out: Out) -> int:
+    from pathlib import Path
+
+    from backlinker.guests import plan_guests, read_guest_list
+
+    vault = _vault(args)
+    path = Path(args.file).expanduser()
+    guests = read_guest_list(path)
+    cap, matches = plan_guests(vault, guests, args.pick or [], event=args.event, label=path.stem, source=path)
+    if out.json:
+        if not args.dry_run and cap.edits:
+            apply(cap, f"guests {path.name}")
+        print(json.dumps({"guests": [{"name": m.guest.name, "status": m.status, "notes": m.notes,
+                                      "about": m.guest.about, **m.guest.facts} for m in matches],
+                          "written": cap.lines if not args.dry_run else {}, "dry_run": args.dry_run},
+                         ensure_ascii=False, indent=2))
+        return 0
+    out.head(f"{path.name}: {len(matches)} guests")
+    by = {k: [m for m in matches if m.status == k] for k in ("known", "maybe", "ambiguous", "new")}
+    if by["known"]:
+        print(f"  you know ({len(by['known'])}): " + ", ".join(m.guest.name for m in by["known"]))
+    for m in by["maybe"]:
+        out.warn(f"{m.guest.name} is close to {' / '.join(n.rsplit('/', 1)[-1][:-3] for n in m.notes)}; "
+                 "add an alias if it's the same person")
+    for m in by["ambiguous"]:
+        out.warn(f"{m.guest.name} matches {' and '.join(n.rsplit('/', 1)[-1][:-3] for n in m.notes)}")
+    if by["new"]:
+        print(f"  new to you ({len(by['new'])}): " + ", ".join(m.guest.name for m in by["new"]))
+    if not args.pick:
+        out.dim('pick the people you want to meet:  bl guests FILE --pick "Name" --pick "Name"')
+        return 0
+    for rel, lines in cap.lines.items():
+        out.ok(rel)
+    _write(out, cap, args.dry_run, f"guests {path.name}")
+    if not args.dry_run and cap.edits:
+        out.dim("research them: ask Claude (with `bl mcp` connected) to research the people you picked")
     return 0
 
 
@@ -240,6 +323,17 @@ def build_parser() -> argparse.ArgumentParser:
     t = sub.add_parser("triage", parents=[common], help="file each line of your inbox note")
     t.add_argument("--all", action="store_true", help="file every line into its daily note without asking")
 
+    d = sub.add_parser("dossier", parents=[common], help="gather what the vault says about a person into their note")
+    d.add_argument("name", help="person's note name, alias or first name")
+    d.add_argument("-n", "--dry-run", action="store_true", help="show the change without writing")
+    d.add_argument("--create", action="store_true", help="start a person note if there isn't one")
+
+    g = sub.add_parser("guests", parents=[common], help="match a guest list; start notes for the people you pick")
+    g.add_argument("file", help="CSV/TSV export, or a text/markdown list with one guest per line")
+    g.add_argument("--pick", action="append", metavar="NAME", help="someone you want to meet (repeatable)")
+    g.add_argument("--event", metavar="NOTE", help="the event's note; picks are listed in it under ## People to meet")
+    g.add_argument("-n", "--dry-run", action="store_true", help="show the change without writing")
+
     sub.add_parser("undo", parents=[common], help="undo the last change")
     sub.add_parser("mcp", parents=[common], help="run the MCP server (stdio) for Claude and other clients")
     return p
@@ -255,10 +349,11 @@ def run(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     out = Out(getattr(args, "json", False))
     handler = {"add": cmd_add, "init": cmd_init, "config": cmd_config, "link": cmd_link,
-               "triage": cmd_triage, "undo": cmd_undo, "mcp": cmd_mcp}[args.command]
+               "triage": cmd_triage, "dossier": cmd_dossier, "guests": cmd_guests, "undo": cmd_undo, "mcp": cmd_mcp}[args.command]
     try:
         return handler(args, out)
-    except (VaultError, NoteNotFound, safewrite.Conflict, ValueError, LookupError, FileNotFoundError) as e:
+    except (VaultError, NoteNotFound, safewrite.Conflict, ValueError, LookupError, FileNotFoundError,
+            FileExistsError) as e:
         print(f"✗ {e}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
