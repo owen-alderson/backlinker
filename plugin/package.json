@@ -1,6 +1,6 @@
 {
   "name": "backlinker-obsidian-plugin",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "Backlinker for Obsidian: quick capture into today's daily note with links to existing notes.",
   "type": "module",

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { findDue, parseWhen } from "../src/dates";
-import { Linker, notesFrom, protectedRe } from "../src/linker";
+import { Linker, dossierRanges, notesFrom, protectedRe } from "../src/linker";
 
 const read = (name: string) => JSON.parse(readFileSync(new URL(`../../spec/${name}`, import.meta.url), "utf-8"));
 
@@ -18,30 +18,13 @@ describe("linker spec (shared with the Python CLI)", () => {
   });
 });
 
-describe("plugin-only linking behavior", () => {
-  it("skips backlinker dossier blocks in linkDocument", () => {
-    const linker = new Linker(notesFrom([
-      { path: "People/Maya Chen.md", aliases: [], tags: [] },
-      { path: "People/Sam Lee.md", aliases: [], tags: [] },
-    ], ["People"]));
-    const text = [
-      "Met Maya Chen today.",
-      "",
-      "<!-- backlinker:dossier: rebuilt by `bl dossier` -->",
-      "## Mentions",
-      "- Maya Chen and Sam Lee discussed Lumen.",
-      "<!-- /backlinker:dossier -->",
-      "",
-    ].join("\n");
-    expect(linker.linkDocument(text).text).toBe([
-      "Met [[Maya Chen]] today.",
-      "",
-      "<!-- backlinker:dossier: rebuilt by `bl dossier` -->",
-      "## Mentions",
-      "- Maya Chen and Sam Lee discussed Lumen.",
-      "<!-- /backlinker:dossier -->",
-      "",
-    ].join("\n"));
+describe("dossier blocks", () => {
+  it("finds each block, including an unclosed one at the end", () => {
+    const text = "a\n<!-- backlinker:dossier: x -->\nb\n<!-- /backlinker:dossier -->\nc\n<!-- backlinker:dossier -->\nd\n";
+    const [first, second] = dossierRanges(text);
+    expect(text.slice(...first)).toBe("<!-- backlinker:dossier: x -->\nb\n<!-- /backlinker:dossier -->");
+    expect(text.slice(...second)).toBe("<!-- backlinker:dossier -->\nd\n");
+    expect(dossierRanges("no block here")).toEqual([]);
   });
 });
 

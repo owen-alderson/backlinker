@@ -16,6 +16,12 @@ const PROTECTED_SRC = [
 const WIKILINK_SRC = String.raw`!?\[\[([^\]|#^\n]*)[^\]\n]*\]\]`;
 const DOSSIER_START = "<!-- backlinker:dossier";
 const DOSSIER_END = "<!-- /backlinker:dossier -->";
+// The block `bl dossier` rebuilds; an unclosed one runs to the end of the note.
+const dossierRe = () => /^[ \t]*<!-- backlinker:dossier[\s\S]*?(?:^[ \t]*<!-- \/backlinker:dossier -->|(?![\s\S]))/gm;
+
+/** [start, end) offsets of each dossier block in a note. */
+export const dossierRanges = (text: string): [number, number][] =>
+  [...text.matchAll(dossierRe())].map((m) => [m.index!, m.index! + m[0].length]);
 
 export const protectedRe = () => new RegExp(PROTECTED_SRC, "gu");
 const tokenRe = () => new RegExp(TOKEN_SRC, "gu");
@@ -178,7 +184,8 @@ export class Linker {
 
   /** Link unlinked mentions across a note: skips frontmatter, code blocks, dossier blocks, headings, %% comments. */
   linkDocument(text: string, selfTarget: string | null = null): Result {
-    const skip = new Set<string>([...text.matchAll(wikilinkRe())].map((m) => m[1]));
+    // Links inside a dossier block don't count as already linked: the block isn't the user's text.
+    const skip = new Set<string>([...text.replace(dossierRe(), "").matchAll(wikilinkRe())].map((m) => m[1]));
     if (selfTarget) skip.add(selfTarget);
     const lines = splitLines(text);
     const res: Result = { text, links: [], ambiguous: [] };
