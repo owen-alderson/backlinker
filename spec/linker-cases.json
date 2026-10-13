@@ -468,6 +468,12 @@
    "self": null,
    "text": "Lumen call\r\nwith Maya\r\n",
    "expect": "[[Lumen Labs|Lumen]] call\r\nwith [[Maya Chen|Maya]]\r\n"
+  },
+  {
+   "why": "a backlinker dossier block is left alone (bl dossier rebuilds it), and its links don't count as already linked",
+   "self": null,
+   "text": "Met Maya.\n\n<!-- backlinker:dossier: rebuilt by `bl dossier` -->\n## From the vault\n- Maya and [[Lumen Labs]]\n<!-- /backlinker:dossier -->\n\nLumen later.\n",
+   "expect": "Met [[Maya Chen|Maya]].\n\n<!-- backlinker:dossier: rebuilt by `bl dossier` -->\n## From the vault\n- Maya and [[Lumen Labs]]\n<!-- /backlinker:dossier -->\n\n[[Lumen Labs|Lumen]] later.\n"
   }
  ]
 }
