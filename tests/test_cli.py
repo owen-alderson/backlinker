@@ -141,9 +141,9 @@ def test_dossier(vault, capsys):
     assert run(["dossier", "Maya", "-n"]) == 0
     out = capsys.readouterr().out
     assert "People/Maya Chen.md\n  1 mention in 1 note · first 2026-10-01" in out and "dry run" in out
-    assert "backlinker:dossier" not in (vault.root / "People/Maya Chen.md").read_text()
+    assert "backlinker:dossier" not in (vault.root / "People/Maya Chen.md").read_text(encoding="utf-8")
     assert run(["dossier", "Maya"]) == 0
-    assert "- 2026-10-01 · [[Jonas Weber]]: 2026-10-01 intro from Maya" in (vault.root / "People/Maya Chen.md").read_text()
+    assert "- 2026-10-01 · [[Jonas Weber]]: 2026-10-01 intro from Maya" in (vault.root / "People/Maya Chen.md").read_text(encoding="utf-8")
     capsys.readouterr()
     assert run(["dossier", "Maya", "--json"]) == 0
     data = json.loads(capsys.readouterr().out)
@@ -164,6 +164,6 @@ def test_guests_report_then_pick(vault, tmp_path, capsys):
     assert "Sam is close to Sam Okafor / Sam Patel" in out
     assert "--pick" in out
     assert run(["guests", str(f), "--pick", "Dee"]) == 0
-    assert "on the guest list for mixer" in (vault.root / "People/Dee Moss.md").read_text()
+    assert "on the guest list for mixer" in (vault.root / "People/Dee Moss.md").read_text(encoding="utf-8")
     assert run(["guests", str(f), "--pick", "Zed"]) == 1
     assert "isn't on the guest list" in capsys.readouterr().err
