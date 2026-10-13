@@ -1,7 +1,7 @@
 {
   "id": "backlinker",
   "name": "Backlinker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "minAppVersion": "1.4.0",
   "description": "Quick capture into today's daily note, with links to the people, companies and topics already in your vault.",
   "author": "Owen Alderson",

@@ -97,7 +97,7 @@ The same linker runs inside Obsidian, on desktop and **mobile**:
 
 Plenty of plugins already link note titles as you type. This one is for capture with the exact rules of the CLI: the same golden test cases ([spec/linker-cases.json](spec/linker-cases.json)) run against both, so a line links the same whether you type it in a terminal, on your phone or through Claude.
 
-Until it's in the community store, install it from the [latest release](https://github.com/owen-alderson/backlinker/releases): put `main.js`, `manifest.json` and `styles.css` in `<vault>/.obsidian/plugins/backlinker/` and enable it under *Community plugins*.
+Install it from Obsidian's community store: *Settings → Community plugins → Browse*, search for **Backlinker** ([store page](https://community.obsidian.md/plugins/backlinker)).
 
 ## Use it from Claude (MCP)
 
